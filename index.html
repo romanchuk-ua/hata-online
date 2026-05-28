@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Авторизація та Завантаження</title>
+    <title>Авторизація, Завантаження та Помилка</title>
     <style>
         /* Скидаємо стандартні відступи */
         body, html {
@@ -13,7 +13,7 @@
             height: 100%;
             overflow: hidden; 
             background-color: #000;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Сучасний шрифт */
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         /* Головний контейнер */
@@ -26,6 +26,7 @@
             background-image: url('img/bg.png');
             background-size: 100% 100%; 
             background-repeat: no-repeat;
+            transition: background-image 0.5s ease; /* Плавна зміна фону */
             --ch: 100vh; 
         }
 
@@ -38,8 +39,8 @@
             left: 0;
         }
 
-        /* Сцена завантаження прихована за замовчуванням */
-        #loading-scene {
+        /* Приховуємо сцени завантаження та помилки за замовчуванням */
+        #loading-scene, #error-scene {
             display: none;
         }
 
@@ -118,24 +119,22 @@
             width: 0%; 
             height: 100%;
             background-color: #F1FE3F; 
-            box-shadow: 0 0 10px rgba(241, 254, 63, 0.5); /* Легке світіння повзунка */
+            box-shadow: 0 0 10px rgba(241, 254, 63, 0.5); 
         }
 
         /* =========================================
-           Сучасне вікно помилки (Glassmorphism)
+           Сучасне вікно помилки вводу даних (Сцена 1)
            ========================================= */
         #error-toast {
             position: absolute;
             bottom: 5%;
             left: 3%;
-            /* Дизайн скла (Glassmorphism) */
             background: rgba(40, 5, 5, 0.6); 
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 60, 60, 0.3);
             box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
-            
-            border-radius: 50px; /* Максимальне заокруглення */
+            border-radius: 50px; 
             padding: calc(var(--ch) * 0.015) calc(var(--ch) * 0.03);
             display: flex;
             align-items: center;
@@ -145,20 +144,16 @@
             font-weight: 500;
             z-index: 100;
             pointer-events: auto;
-            
-            /* Анімація виїзду (пружинка) */
             transform: translateX(-150%);
             opacity: 0;
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        /* Клас, який додається через JS для появи */
         #error-toast.show {
             transform: translateX(0);
             opacity: 1;
         }
 
-        /* Іконка оклику */
         .toast-icon {
             display: flex;
             justify-content: center;
@@ -173,7 +168,6 @@
             box-shadow: 0 0 10px rgba(255, 59, 59, 0.5);
         }
 
-        /* Кнопка закриття (Хрестик) */
         .toast-close {
             cursor: pointer;
             color: rgba(255, 255, 255, 0.5);
@@ -181,8 +175,36 @@
             transition: color 0.2s ease;
             margin-left: calc(var(--ch) * 0.01);
         }
-        .toast-close:hover {
-            color: #fff;
+        .toast-close:hover { color: #fff; }
+
+        /* =========================================
+           Таймер повернення (Сцена 3 - Error)
+           ========================================= */
+        #countdown-box {
+            position: absolute;
+            top: 5%;
+            right: 3%;
+            background: rgba(20, 5, 5, 0.7); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 60, 60, 0.3);
+            border-radius: 15px;
+            padding: calc(var(--ch) * 0.02) calc(var(--ch) * 0.03);
+            color: #ffcccc;
+            font-size: calc(var(--ch) * 0.025);
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: calc(var(--ch) * 0.01);
+        }
+
+        #countdown-timer {
+            color: #ff3b3b;
+            font-size: calc(var(--ch) * 0.035);
+            font-weight: bold;
+            min-width: calc(var(--ch) * 0.04); /* Щоб текст не скакав при зміні цифр 10 -> 9 */
+            text-align: center;
         }
 
         /* =========================================
@@ -229,28 +251,34 @@
             </div>
         </div>
 
+        <div class="scene" id="error-scene">
+            <div id="countdown-box">
+                Вас буде повернено у меню через: <span id="countdown-timer">10</span>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Елементи логіну
+        // Елементи
         const emailInput = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
         const passwordInput = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
         const loginBtn = document.getElementById('login-btn');
 
-        // Елементи сцен
         const mainContainer = document.getElementById('main-container');
         const loginScene = document.getElementById('login-scene');
         const loadingScene = document.getElementById('loading-scene');
+        const errorScene = document.getElementById('error-scene');
         const progressFill = document.getElementById('progress-fill');
+        const timerElement = document.getElementById('countdown-timer');
 
-        // Елементи вікна помилки
         const errorToast = document.getElementById('error-toast');
         const toastCloseBtn = document.getElementById('toast-close-btn');
-        let hideToastTimeout; // Змінна для таймера, щоб вікно не блимало
+        let hideToastTimeout;
 
-        // Логіка зміни картинок полів вводу (email_h, password_h)
+        // Логіка зміни картинок (email_h, password_h)
         function updateStates() {
             if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
@@ -268,40 +296,32 @@
         emailInput.addEventListener('focus', updateStates);
         emailInput.addEventListener('blur', updateStates);
         emailInput.addEventListener('input', updateStates);
-
         passwordInput.addEventListener('focus', updateStates);
         passwordInput.addEventListener('blur', updateStates);
         passwordInput.addEventListener('input', updateStates);
-        
         updateStates();
 
-        // Функція для показу помилки
+        // Функція показу помилки вводу
         function showError() {
-            // Скидаємо попередній таймер, якщо клікають кілька разів підряд
             clearTimeout(hideToastTimeout);
-            
-            // Показуємо вікно
             errorToast.classList.add('show');
-
-            // Автоматично ховаємо через 4 секунди
             hideToastTimeout = setTimeout(() => {
                 errorToast.classList.remove('show');
             }, 4000);
         }
 
-        // Закриття вікна по хрестику
         toastCloseBtn.addEventListener('click', () => {
             clearTimeout(hideToastTimeout);
             errorToast.classList.remove('show');
         });
 
-        // Логіка натискання на кнопку входу
+        // Натискання на Логін
         loginBtn.addEventListener('click', () => {
             
             // ПЕРЕВІРКА ДАНИХ
             if (emailInput.value === "litynskyiroman2023@gmail.com" && passwordInput.value === "l020712r") {
                 
-                // Якщо все вірно - запускаємо гру
+                // Перехід до екрану завантаження
                 loginScene.style.display = 'none';
                 mainContainer.style.backgroundImage = "url('img/game_load.png')";
                 loadingScene.style.display = 'block';
@@ -313,12 +333,44 @@
                     progressFill.style.width = '100%';
                 }, 50);
 
+                // Після закінчення завантаження
                 setTimeout(() => {
-                    window.location.href = 'game.html';
+                    // Перехід до екрану ПОМИЛКИ (error.png)
+                    loadingScene.style.display = 'none';
+                    mainContainer.style.backgroundImage = "url('img/error.png')";
+                    errorScene.style.display = 'block';
+
+                    // Запуск таймера на 10 секунд
+                    let timeLeft = 10;
+                    timerElement.textContent = timeLeft;
+
+                    const countdownInterval = setInterval(() => {
+                        timeLeft--;
+                        timerElement.textContent = timeLeft;
+
+                        // Коли час вийшов
+                        if (timeLeft <= 0) {
+                            clearInterval(countdownInterval);
+                            
+                            // 1. Очищаємо поля та повертаємо картинки
+                            emailInput.value = "";
+                            passwordInput.value = "";
+                            updateStates();
+
+                            // 2. Скидаємо смугу завантаження для наступного разу
+                            progressFill.style.transition = 'none';
+                            progressFill.style.width = '0%';
+
+                            // 3. Повертаємо початковий екран
+                            errorScene.style.display = 'none';
+                            mainContainer.style.backgroundImage = "url('img/bg.png')";
+                            loginScene.style.display = 'block';
+                        }
+                    }, 1000); // 1000мс = 1 секунда
+
                 }, randomLoadTime + 50);
 
             } else {
-                // Якщо дані НЕ вірні - показуємо гарну помилку
                 showError();
             }
         });
