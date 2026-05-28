@@ -13,7 +13,7 @@
             height: 100%;
             overflow: hidden; 
             background-color: #000;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Сучасний шрифт */
         }
 
         /* Головний контейнер */
@@ -23,7 +23,6 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            /* Початковий фон - меню входу */
             background-image: url('img/bg.png');
             background-size: 100% 100%; 
             background-repeat: no-repeat;
@@ -110,18 +109,84 @@
             left: calc(82 / 1281 * 100%);
             width: calc(1117 / 1281 * 100%);
             height: calc(10 / 584 * 100%);
-            background-color: #494949; /* Сірий фон смуги */
+            background-color: #494949; 
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         #progress-fill {
-            width: 0%; /* Початкова ширина */
+            width: 0%; 
             height: 100%;
-            background-color: #F1FE3F; /* Колір завантаження */
-            /* Плавність буде задаватись через JS динамічно */
+            background-color: #F1FE3F; 
+            box-shadow: 0 0 10px rgba(241, 254, 63, 0.5); /* Легке світіння повзунка */
         }
 
         /* =========================================
-           Мобільна адаптація (Поворот на 90 градусів)
+           Сучасне вікно помилки (Glassmorphism)
+           ========================================= */
+        #error-toast {
+            position: absolute;
+            bottom: 5%;
+            left: 3%;
+            /* Дизайн скла (Glassmorphism) */
+            background: rgba(40, 5, 5, 0.6); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 60, 60, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+            
+            border-radius: 50px; /* Максимальне заокруглення */
+            padding: calc(var(--ch) * 0.015) calc(var(--ch) * 0.03);
+            display: flex;
+            align-items: center;
+            gap: calc(var(--ch) * 0.02);
+            color: #ffcccc;
+            font-size: calc(var(--ch) * 0.025);
+            font-weight: 500;
+            z-index: 100;
+            pointer-events: auto;
+            
+            /* Анімація виїзду (пружинка) */
+            transform: translateX(-150%);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* Клас, який додається через JS для появи */
+        #error-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* Іконка оклику */
+        .toast-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ff3b3b;
+            color: #fff;
+            width: calc(var(--ch) * 0.04);
+            height: calc(var(--ch) * 0.04);
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: calc(var(--ch) * 0.025);
+            box-shadow: 0 0 10px rgba(255, 59, 59, 0.5);
+        }
+
+        /* Кнопка закриття (Хрестик) */
+        .toast-close {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: calc(var(--ch) * 0.03);
+            transition: color 0.2s ease;
+            margin-left: calc(var(--ch) * 0.01);
+        }
+        .toast-close:hover {
+            color: #fff;
+        }
+
+        /* =========================================
+           Мобільна адаптація
            ========================================= */
         @media screen and (orientation: portrait) {
             .layout-container {
@@ -150,6 +215,12 @@
             </div>
 
             <button id="login-btn" class="ui-element"></button>
+
+            <div id="error-toast">
+                <div class="toast-icon">!</div>
+                <div class="toast-text">Невірно введені дані</div>
+                <div class="toast-close" id="toast-close-btn">✕</div>
+            </div>
         </div>
 
         <div class="scene" id="loading-scene">
@@ -168,13 +239,18 @@
         const passwordWrapper = document.getElementById('password-wrapper');
         const loginBtn = document.getElementById('login-btn');
 
-        // Елементи для перемикання сцен
+        // Елементи сцен
         const mainContainer = document.getElementById('main-container');
         const loginScene = document.getElementById('login-scene');
         const loadingScene = document.getElementById('loading-scene');
         const progressFill = document.getElementById('progress-fill');
 
-        // Логіка зміни картинок полів вводу
+        // Елементи вікна помилки
+        const errorToast = document.getElementById('error-toast');
+        const toastCloseBtn = document.getElementById('toast-close-btn');
+        let hideToastTimeout; // Змінна для таймера, щоб вікно не блимало
+
+        // Логіка зміни картинок полів вводу (email_h, password_h)
         function updateStates() {
             if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
@@ -199,31 +275,52 @@
         
         updateStates();
 
+        // Функція для показу помилки
+        function showError() {
+            // Скидаємо попередній таймер, якщо клікають кілька разів підряд
+            clearTimeout(hideToastTimeout);
+            
+            // Показуємо вікно
+            errorToast.classList.add('show');
+
+            // Автоматично ховаємо через 4 секунди
+            hideToastTimeout = setTimeout(() => {
+                errorToast.classList.remove('show');
+            }, 4000);
+        }
+
+        // Закриття вікна по хрестику
+        toastCloseBtn.addEventListener('click', () => {
+            clearTimeout(hideToastTimeout);
+            errorToast.classList.remove('show');
+        });
+
         // Логіка натискання на кнопку входу
         loginBtn.addEventListener('click', () => {
-            // 1. Ховаємо поля вводу і кнопку
-            loginScene.style.display = 'none';
+            
+            // ПЕРЕВІРКА ДАНИХ
+            if (emailInput.value === "litynskyiroman2023@gmail.com" && passwordInput.value === "l020712r") {
+                
+                // Якщо все вірно - запускаємо гру
+                loginScene.style.display = 'none';
+                mainContainer.style.backgroundImage = "url('img/game_load.png')";
+                loadingScene.style.display = 'block';
 
-            // 2. Змінюємо задній фон на зображення загрузки
-            mainContainer.style.backgroundImage = "url('img/game_load.png')";
+                const randomLoadTime = Math.floor(Math.random() * (13000 - 7000 + 1)) + 7000;
 
-            // 3. Показуємо сцену із смугою завантаження
-            loadingScene.style.display = 'block';
+                setTimeout(() => {
+                    progressFill.style.transition = `width ${randomLoadTime}ms linear`;
+                    progressFill.style.width = '100%';
+                }, 50);
 
-            // 4. Генеруємо випадковий час у мілісекундах: від 7000мс (7с) до 13000мс (13с)
-            const randomLoadTime = Math.floor(Math.random() * (13000 - 7000 + 1)) + 7000;
+                setTimeout(() => {
+                    window.location.href = 'game.html';
+                }, randomLoadTime + 50);
 
-            // 5. Запускаємо анімацію завантаження
-            // Використовуємо setTimeout на 50мс, щоб браузер встиг відобразити сцену перед початком анімації
-            setTimeout(() => {
-                progressFill.style.transition = `width ${randomLoadTime}ms linear`;
-                progressFill.style.width = '100%';
-            }, 50);
-
-            // 6. Перехід на іншу сторінку після завершення анімації
-            setTimeout(() => {
-                window.location.href = 'game.html';
-            }, randomLoadTime + 50);
+            } else {
+                // Якщо дані НЕ вірні - показуємо гарну помилку
+                showError();
+            }
         });
     </script>
 
