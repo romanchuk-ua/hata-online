@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Авторизація</title>
     <style>
         /* Базові стилі для повного екрану */
@@ -11,7 +11,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #0f0f12; /* Темний фон навколо макета, якщо екран більший */
+            background-color: #0f0f12; /* Темний фон поза макетом */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,7 +19,7 @@
             font-family: sans-serif;
         }
 
-        /* Головний контейнер за розміром вашої Figma-фрейму */
+        /* Головний контейнер за розміром Figma-фрейму */
         .page-container {
             position: relative;
             width: 1281px;
@@ -28,30 +28,29 @@
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;
-            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5); /* Ефектна тінь для макета */
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease; /* Плавний поворот при зміні орієнтації екрану */
         }
 
         /* Стилі для обгорток Email та Password */
         .input-wrapper {
             position: absolute;
-            right: 31px;      /* Відступ справа з Figma */
-            width: 473px;     /* Точна ширина з Figma */
-            height: 64px;     /* Точна висота з Figma */
+            right: 31px;
+            width: 473px;
+            height: 64px;
             background-size: 100% 100%;
             background-repeat: no-repeat;
             display: flex;
             align-items: center;
         }
 
-        /* Позиціонування Email */
         #email-wrapper {
-            top: 165px;       /* Відступ зверху з Figma */
+            top: 165px;
             background-image: url('img/email.png');
         }
 
-        /* Позиціонування Password */
         #password-wrapper {
-            top: 245px;       /* Відступ зверху з Figma */
+            top: 245px;
             background-image: url('img/password.png');
         }
 
@@ -62,19 +61,19 @@
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff;      /* Білий колір тексту */
+            color: #ffffff;
             font-size: 16px;
-            padding: 0 24px;     /* Внутрішній відступ, щоб текст не прилипав до країв */
+            padding: 0 24px;
             box-sizing: border-box;
         }
 
         /* Кнопка Логіну */
         #login-btn {
             position: absolute;
-            top: 325px;          /* Відступ зверху з Figma */
-            right: 26px;         /* Відступ справа з Figma */
-            width: 251px;        /* Ширина кнопки */
-            height: 63px;        /* Висота кнопки */
+            top: 325px;
+            right: 26px;
+            width: 251px;
+            height: 63px;
             background-image: url('img/login.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
@@ -85,12 +84,28 @@
             transition: opacity 0.2s ease, transform 0.1s ease;
         }
 
-        /* Ефект при наведенні та кліку на кнопку */
         #login-btn:hover {
             opacity: 0.9;
         }
         #login-btn:active {
-            transform: scale(0.98); /* Легке натискання */
+            transform: scale(0.98);
+        }
+
+        /* =======================================================
+           Мобільна адаптація (розворот на 90 градусів)
+           ======================================================= */
+        @media screen and (orientation: portrait) {
+            .page-container {
+                /* Розвертаємо макет на 90 градусів і зменшуємо його, щоб він вліз у вертикальний екран */
+                transform: rotate(90deg) scale(0.65);
+            }
+        }
+        
+        /* Додатково: якщо телефон лежить горизонтально, але екран замалий для 1281px */
+        @media screen and (orientation: landscape) and (max-width: 1300px) {
+            .page-container {
+                transform: scale(0.7); /* Просто зменшуємо, не розвертаючи */
+            }
         }
     </style>
 </head>
@@ -106,23 +121,18 @@
             <input type="password" id="password" class="custom-input">
         </div>
 
-        <button id="login-btn" id="login" title="Увійти"></button>
+        <button id="login-btn" title="Увійти"></button>
 
     </div>
 
     <script>
-        // Елементи Email
         const emailInput = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
-
-        // Елементи Password
         const passwordInput = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
-
-        // Кнопка Login
         const loginBtn = document.getElementById('login-btn');
 
-        // Зміна картинок для Email при фокусі
+        // Зміна картинок для Email
         emailInput.addEventListener('focus', () => {
             emailWrapper.style.backgroundImage = "url('img/email_h.png')";
         });
@@ -130,7 +140,7 @@
             emailWrapper.style.backgroundImage = "url('img/email.png')";
         });
 
-        // Зміна картинок для Паролю при фокусі
+        // Зміна картинок для Паролю
         passwordInput.addEventListener('focus', () => {
             passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
         });
@@ -138,10 +148,9 @@
             passwordWrapper.style.backgroundImage = "url('img/password.png')";
         });
 
-        // Проста перевірка кліку на кнопку (для тесту)
+        // Клік по кнопці (для тесту)
         loginBtn.addEventListener('click', () => {
             console.log("Кнопку Login натиснуто!");
-            // Тут можна додати перевірку введених даних
         });
     </script>
 
