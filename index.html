@@ -37,7 +37,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            display: none; /* За замовчуванням усі сцени приховані, крім першої */
+            display: none; /* За замовчуванням усі сцени приховані */
         }
         
         #login-scene {
@@ -99,7 +99,7 @@
             box-sizing: border-box;
         }
 
-        /* Вікно помилки */
+        /* Вікно помилки (невірний пароль) */
         #error-toast {
             position: absolute;
             bottom: 5%;
@@ -129,7 +129,7 @@
         .toast-close:hover { color: #fff; }
 
         /* =========================================
-           СЦЕНА 2: Завантаження
+           СЦЕНА 2: Завантаження (connect.png)
            ========================================= */
         #progress-track {
             position: absolute;
@@ -166,7 +166,7 @@
 
         #disconnect-btn {
             top: calc(501 / 584 * 100%);
-            left: calc(1012 / 1281 * 100%); /* Відступ зліва */
+            left: calc(1012 / 1281 * 100%); 
             width: calc(251 / 1281 * 100%);
             height: calc(63 / 584 * 100%);
             background-image: url('img/disconnect.png');
@@ -191,7 +191,7 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-        #vokzal-img:hover { transform: scale(1.05); } /* Ефект при наведенні */
+        #vokzal-img:hover { transform: scale(1.05); } 
 
         #last-img {
             top: calc(373 / 584 * 100%);
@@ -202,7 +202,37 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-        #last-img:hover { transform: scale(1.05); } /* Ефект при наведенні */
+        #last-img:hover { transform: scale(1.05); }
+
+        /* =========================================
+           СЦЕНА 5: Таймер помилки (error.png)
+           ========================================= */
+        #countdown-box {
+            position: absolute;
+            top: 5%;
+            right: 3%;
+            background: rgba(20, 5, 5, 0.7); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 60, 60, 0.3);
+            border-radius: 15px;
+            padding: calc(var(--ch) * 0.02) calc(var(--ch) * 0.03);
+            color: #ffcccc;
+            font-size: calc(var(--ch) * 0.025);
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: calc(var(--ch) * 0.01);
+        }
+
+        #countdown-timer {
+            color: #ff3b3b;
+            font-size: calc(var(--ch) * 0.035);
+            font-weight: bold;
+            min-width: calc(var(--ch) * 0.04); 
+            text-align: center;
+        }
 
         /* =========================================
            Мобільна адаптація
@@ -258,10 +288,15 @@
             <div id="last-img" class="ui-element"></div>
         </div>
 
+        <div class="scene" id="error-scene">
+            <div id="countdown-box">
+                Вас буде повернено у меню через: <span id="countdown-timer">10</span>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Елементи
         const emailInput = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
         const passwordInput = document.getElementById('password');
@@ -273,11 +308,15 @@
         const loadingScene = document.getElementById('loading-scene');
         const nextScene = document.getElementById('next-scene');
         const spawnScene = document.getElementById('spawn-scene');
+        const errorScene = document.getElementById('error-scene');
         const progressFill = document.getElementById('progress-fill');
+        const timerElement = document.getElementById('countdown-timer');
         
-        // Елементи 3-ї сцени
         const connectingDots = document.getElementById('connecting-dots');
         const disconnectBtn = document.getElementById('disconnect-btn');
+
+        const vokzalImg = document.getElementById('vokzal-img');
+        const lastImg = document.getElementById('last-img');
 
         const errorToast = document.getElementById('error-toast');
         const toastCloseBtn = document.getElementById('toast-close-btn');
@@ -286,7 +325,7 @@
         let connectionTimeout;
         let dotsInterval;
 
-        // Логіка зміни картинок (email_h, password_h)
+        // Зміна картинок полів
         function updateStates() {
             if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
@@ -309,7 +348,6 @@
         passwordInput.addEventListener('input', updateStates);
         updateStates();
 
-        // Функція показу помилки вводу
         function showError() {
             clearTimeout(hideToastTimeout);
             errorToast.classList.add('show');
@@ -323,41 +361,80 @@
             errorToast.classList.remove('show');
         });
 
-        // ПОВЕРНЕННЯ В ГОЛОВНЕ МЕНЮ (кнопка Disconnect)
+        // ПОВЕРНЕННЯ В ГОЛОВНЕ МЕНЮ (Кнопка Disconnect)
         function resetToMenu() {
-            // Зупиняємо таймери та анімації
             clearTimeout(connectionTimeout);
             clearInterval(dotsInterval);
 
-            // Очищаємо поля
             emailInput.value = "";
             passwordInput.value = "";
             updateStates();
 
-            // Скидаємо смугу завантаження
             progressFill.style.transition = 'none';
             progressFill.style.width = '0%';
 
-            // Ховаємо всі сцени
             loadingScene.style.display = 'none';
             nextScene.style.display = 'none';
             spawnScene.style.display = 'none';
+            errorScene.style.display = 'none';
 
-            // Повертаємо головне меню
             mainContainer.style.backgroundImage = "url('img/bg.png')";
             loginScene.style.display = 'block';
         }
 
         disconnectBtn.addEventListener('click', resetToMenu);
 
-        // Натискання на Логін
+        // ЛОГІКА КЛІКУ ПО СПАВНАМ (vokzal / last)
+        function handleSpawnClick() {
+            // Приховуємо сцену вибору спавну
+            spawnScene.style.display = 'none';
+
+            // Показуємо second.png рівно на 1 секунду
+            mainContainer.style.backgroundImage = "url('img/second.png')";
+
+            setTimeout(() => {
+                // Через секунду ставимо error.png та запускаємо таймер
+                mainContainer.style.backgroundImage = "url('img/error.png')";
+                errorScene.style.display = 'block';
+
+                let timeLeft = 10;
+                timerElement.textContent = timeLeft;
+
+                const countdownInterval = setInterval(() => {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        
+                        // Скидаємо все і повертаємось в меню
+                        emailInput.value = "";
+                        passwordInput.value = "";
+                        updateStates();
+
+                        progressFill.style.transition = 'none';
+                        progressFill.style.width = '0%';
+
+                        errorScene.style.display = 'none';
+                        mainContainer.style.backgroundImage = "url('img/bg.png')";
+                        loginScene.style.display = 'block';
+                    }
+                }, 1000);
+
+            }, 1000);
+        }
+
+        vokzalImg.addEventListener('click', handleSpawnClick);
+        lastImg.addEventListener('click', handleSpawnClick);
+
+        // НАТИСКАННЯ НА КНОПКУ ЛОГІНУ
         loginBtn.addEventListener('click', () => {
             
             if (emailInput.value === "litynskyiroman2023@gmail.com" && passwordInput.value === "l020712r") {
                 
-                // --- 1. ПЕРЕХІД ДО ЗАВАНТАЖЕННЯ ---
+                // --- 1. ПЕРЕХІД ДО ЗАВАНТАЖЕННЯ (Тепер connect.png) ---
                 loginScene.style.display = 'none';
-                mainContainer.style.backgroundImage = "url('img/game_load.png')";
+                mainContainer.style.backgroundImage = "url('img/connect.png')";
                 loadingScene.style.display = 'block';
 
                 const randomLoadTime = Math.floor(Math.random() * (13000 - 7000 + 1)) + 7000;
@@ -367,25 +444,21 @@
                     progressFill.style.width = '100%';
                 }, 50);
 
-                // Після закінчення завантаження
                 setTimeout(() => {
                     // --- 2. ПЕРЕХІД ДО ЕКРАНУ ПІДКЛЮЧЕННЯ (next.png) ---
                     loadingScene.style.display = 'none';
                     mainContainer.style.backgroundImage = "url('img/next.png')";
                     nextScene.style.display = 'block';
 
-                    // Анімація крапочок
                     let dotCount = 0;
                     dotsInterval = setInterval(() => {
-                        dotCount = (dotCount + 1) % 4; // Рахує: 0, 1, 2, 3
+                        dotCount = (dotCount + 1) % 4; 
                         connectingDots.textContent = '.'.repeat(dotCount);
-                    }, 500); // Кожні 500 мілісекунд (півсекунди)
+                    }, 500); 
 
-                    // Рандомний час підключення (від 5 до 9 секунд)
                     const connectTime = Math.floor(Math.random() * (9000 - 5000 + 1)) + 5000;
 
                     connectionTimeout = setTimeout(() => {
-                        // Зупиняємо крапочки
                         clearInterval(dotsInterval);
 
                         // --- 3. ПЕРЕХІД ДО ЕКРАНУ СПАВНУ (spawn.png) ---
