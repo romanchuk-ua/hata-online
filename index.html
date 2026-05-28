@@ -2,156 +2,188 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Авторизація</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Responsive Login Page</title>
     <style>
-        /* Базові стилі для повного екрану */
+        /* Base styles - ensure full screen usage */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #0f0f12; /* Темний фон поза макетом */
+            overflow: hidden; /* Prevent scrolling, force single view */
+            background-color: #fff; /* White background, but will be covered by bg.png */
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            font-family: sans-serif;
         }
 
-        /* Головний контейнер за розміром Figma-фрейму */
-        .page-container {
-            position: relative;
-            width: 1281px;
-            height: 584px;
+        /* The background scene */
+        .full-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background-image: url('img/bg.png');
-            background-size: 100% 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        /* Responsive Layout Container: Scales based on viewport aspect ratio */
+        .layout-container {
+            position: relative;
+            z-index: 2;
+            pointer-events: none; /* Let clicks pass through container to UI elements */
+            
+            /* Scaling factor logic (Visual Pixels scaled using vmin) */
+            --design-width: 1281;
+            --design-height: 584;
+            --base-scale: 1vmin; /* Controls scaling intensity */
+
+            width: calc(var(--design-width) * var(--base-scale));
+            height: calc(var(--design-height) * var(--base-scale));
+            
+            /* Center and handle mobile rotation */
+            transition: transform 0.3s ease;
+        }
+
+        /* Shared UI element properties - using percentages for internal scaling */
+        .ui-element {
+            position: absolute;
+            pointer-events: auto; /* Enable clicks on inputs and buttons */
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease; /* Плавний поворот при зміні орієнтації екрану */
         }
 
-        /* Стилі для обгорток Email та Password */
-        .input-wrapper {
-            position: absolute;
-            right: 31px;
-            width: 473px;
-            height: 64px;
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
+        /* Email Input Wrapper */
+        #email-wrapper {
+            /* Positioning relative to top-right corner using vmin scales */
+            top: calc(165 * var(--base-scale));
+            right: calc(31 * var(--base-scale));
+            
+            /* Figma Dimensions scaled down to container context */
+            width: calc(473 * var(--base-scale));
+            height: calc(64 * var(--base-scale));
+            
+            background-image: url('img/email.png');
             display: flex;
             align-items: center;
         }
 
-        #email-wrapper {
-            top: 165px;
-            background-image: url('img/email.png');
-        }
-
+        /* Password Input Wrapper */
         #password-wrapper {
-            top: 245px;
+            top: calc(245 * var(--base-scale));
+            right: calc(31 * var(--base-scale));
+            
+            width: calc(473 * var(--base-scale));
+            height: calc(64 * var(--base-scale));
+            
             background-image: url('img/password.png');
+            display: flex;
+            align-items: center;
         }
 
-        /* Стилі для самих інпутів всередині картинок */
+        /* Login Button */
+        #login-btn {
+            top: calc(325 * var(--base-scale));
+            right: calc(26 * var(--base-scale));
+            
+            width: calc(251 * var(--base-scale));
+            height: calc(63 * var(--base-scale));
+            
+            background-image: url('img/login.png');
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        #login-btn:hover { opacity: 0.8; }
+
+        /* Actual input fields */
         .custom-input {
             width: 100%;
             height: 100%;
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff;
-            font-size: 16px;
-            padding: 0 24px;
+            color: #ffffff; /* White text as requested */
+            font-size: calc(18 * var(--base-scale)); /* Scale font */
+            padding: 0 calc(20 * var(--base-scale)); /* Responsive padding */
             box-sizing: border-box;
+            font-family: sans-serif;
         }
 
-        /* Кнопка Логіну */
-        #login-btn {
-            position: absolute;
-            top: 325px;
-            right: 26px;
-            width: 251px;
-            height: 63px;
-            background-image: url('img/login.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-color: transparent;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.1s ease;
-        }
-
-        #login-btn:hover {
-            opacity: 0.9;
-        }
-        #login-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* =======================================================
-           Мобільна адаптація (розворот на 90 градусів)
-           ======================================================= */
+        /* Mobile Adjustment: Force Landscape Rotation and Fill Width */
         @media screen and (orientation: portrait) {
-            .page-container {
-                /* Розвертаємо макет на 90 градусів і зменшуємо його, щоб він вліз у вертикальний екран */
-                transform: rotate(90deg) scale(0.65);
+            .layout-container {
+                /* Rotate container 90deg */
+                transform: rotate(90deg);
+                
+                /* Adjust scaling: width becomes height, fit to screen width */
+                --base-scale: calc(100vw / var(--design-height)); 
+                
+                /* Recalculate dimensions for new scale and orientation */
+                width: calc(var(--design-width) * var(--base-scale));
+                height: calc(var(--design-height) * var(--base-scale));
             }
         }
-        
-        /* Додатково: якщо телефон лежить горизонтально, але екран замалий для 1281px */
-        @media screen and (orientation: landscape) and (max-width: 1300px) {
-            .page-container {
-                transform: scale(0.7); /* Просто зменшуємо, не розвертаючи */
-            }
-        }
+
     </style>
 </head>
 <body>
 
-    <div class="page-container">
+    <div class="full-bg"></div>
+
+    <div class="layout-container">
         
-        <div id="email-wrapper" class="input-wrapper">
-            <input type="text" id="email" class="custom-input" autocomplete="off">
+        <div id="email-wrapper" class="ui-element">
+            <input type="email" id="email" class="custom-input" autocomplete="off">
         </div>
 
-        <div id="password-wrapper" class="input-wrapper">
+        <div id="password-wrapper" class="ui-element">
             <input type="password" id="password" class="custom-input">
         </div>
 
-        <button id="login-btn" title="Увійти"></button>
+        <button id="login-btn" class="ui-element"></button>
 
     </div>
 
     <script>
-        const emailInput = document.getElementById('email');
+        // State change logic for inputs
+        const email = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
-        const passwordInput = document.getElementById('password');
+        const password = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
-        const loginBtn = document.getElementById('login-btn');
 
-        // Зміна картинок для Email
-        emailInput.addEventListener('focus', () => {
-            emailWrapper.style.backgroundImage = "url('img/email_h.png')";
-        });
-        emailInput.addEventListener('blur', () => {
-            emailWrapper.style.backgroundImage = "url('img/email.png')";
-        });
+        // Functions to update background based on interaction
+        function updateEmailState() {
+            if (email === document.activeElement || email.value.length > 0) {
+                emailWrapper.style.backgroundImage = "url('img/email_h.png')";
+            } else {
+                emailWrapper.style.backgroundImage = "url('img/email.png')";
+            }
+        }
 
-        // Зміна картинок для Паролю
-        passwordInput.addEventListener('focus', () => {
-            passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
-        });
-        passwordInput.addEventListener('blur', () => {
-            passwordWrapper.style.backgroundImage = "url('img/password.png')";
-        });
+        function updatePasswordState() {
+            if (password === document.activeElement || password.value.length > 0) {
+                passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
+            } else {
+                passwordWrapper.style.backgroundImage = "url('img/password.png')";
+            }
+        }
 
-        // Клік по кнопці (для тесту)
-        loginBtn.addEventListener('click', () => {
-            console.log("Кнопку Login натиснуто!");
-        });
+        // Listen for focus/blur and typing
+        email.addEventListener('focus', updateEmailState);
+        email.addEventListener('blur', updateEmailState);
+        email.addEventListener('input', updateEmailState);
+
+        password.addEventListener('focus', updatePasswordState);
+        password.addEventListener('blur', updatePasswordState);
+        password.addEventListener('input', updatePasswordState);
     </script>
 
 </body>
