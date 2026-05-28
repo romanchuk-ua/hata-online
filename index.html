@@ -5,138 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Авторизація</title>
     <style>
-        /* Базові стилі */
+        /* Скидаємо стандартні відступи */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; 
-            background-color: #000; /* Чорний фон на випадок завантаження */
+            overflow: hidden; /* Ніяких скролів */
+            background-color: #000;
             font-family: sans-serif;
         }
 
-        /* Задній фон */
-        .full-bg {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 100vw;
-            height: 100vh;
-            /* Центруємо фон */
-            transform: translate(-50%, -50%);
-            background-image: url('img/bg.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 1;
-        }
-
-        /* Контейнер макета (фіксовані розміри з Figma) */
+        /* Контейнер, який повністю заповнює екран (100% ширини і висоти) */
         .layout-container {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 1281px;
-            height: 584px;
-            /* Масштабуємо макет під екран:
-               min(1, ...) означає, що макет ніколи не буде більшим за 100% (не буде гігантським на ПК),
-               але якщо екран менший - він пропорційно зменшиться (95vw/95vh залишає невеликі відступи по краях)
-            */
-            transform: translate(-50%, -50%) scale(min(1, min(95vw / 1281, 95vh / 584)));
-            z-index: 2;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('img/bg.png');
+            background-size: 100% 100%; /* Розтягуємо фон точно по екрану */
+            background-repeat: no-repeat;
+            --ch: 100vh; /* Змінна для правильного розміру шрифту */
         }
 
-        /* Спільні стилі для обгорток (позиції точно як у Figma) */
-        .input-wrapper {
+        /* Спільні стилі для елементів інтерфейсу */
+        .ui-element {
             position: absolute;
-            right: 31px;
-            width: 473px;
-            height: 64px;
-            background-size: 100% 100%;
+            background-size: 100% 100%; /* Картинки кнопок розтягуються разом з макетом */
             background-repeat: no-repeat;
             display: flex;
             align-items: center;
         }
 
+        /* Email: перевели пікселі з Figma у відсотки */
         #email-wrapper {
-            top: 165px;
+            top: calc(165 / 584 * 100%);
+            right: calc(31 / 1281 * 100%);
+            width: calc(473 / 1281 * 100%);
+            height: calc(64 / 584 * 100%);
             background-image: url('img/email.png');
         }
 
+        /* Password: перевели пікселі з Figma у відсотки */
         #password-wrapper {
-            top: 245px;
+            top: calc(245 / 584 * 100%);
+            right: calc(31 / 1281 * 100%);
+            width: calc(473 / 1281 * 100%);
+            height: calc(64 / 584 * 100%);
             background-image: url('img/password.png');
         }
 
-        /* Кнопка Логіну */
+        /* Кнопка Логін: перевели пікселі з Figma у відсотки */
         #login-btn {
-            position: absolute;
-            top: 325px;
-            right: 26px;
-            width: 251px;
-            height: 63px;
+            top: calc(325 / 584 * 100%);
+            right: calc(26 / 1281 * 100%);
+            width: calc(251 / 1281 * 100%);
+            height: calc(63 / 584 * 100%);
             background-image: url('img/login.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
             background-color: transparent;
             border: none;
             cursor: pointer;
             transition: opacity 0.2s;
             outline: none;
         }
+        
         #login-btn:hover { opacity: 0.8; }
         #login-btn:active { transform: scale(0.98); }
 
-        /* Поля введення */
+        /* Внутрішні текстові поля */
         .custom-input {
             width: 100%;
             height: 100%;
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff; 
-            font-size: 18px; /* Розмір тексту автоматично масштабується разом з контейнером */
-            padding: 0 24px; 
+            color: #ffffff;
+            font-size: calc(var(--ch) * 0.035); /* Розмір шрифту ідеально адаптується */
+            padding: 0 5%; /* Гнучкий внутрішній відступ */
             box-sizing: border-box;
         }
 
         /* =========================================
-           Мобільна адаптація (Вертикальний екран)
+           Мобільна адаптація (Поворот на 90 градусів)
            ========================================= */
         @media screen and (orientation: portrait) {
-            
-            /* Перевертаємо задній фон на 90 градусів */
-            .full-bg {
-                /* Міняємо місцями ширину і висоту, щоб при повороті фон заповнив екран */
+            .layout-container {
+                /* Міняємо місцями ширину та висоту */
                 width: 100vh;
                 height: 100vw;
-                transform: translate(-50%, -50%) rotate(90deg);
-            }
-
-            /* Перевертаємо макет з інпутами на 90 градусів */
-            .layout-container {
-                /* Рахуємо масштаб для перевернутого стану (міняємо місцями vw та vh) */
-                transform: translate(-50%, -50%) rotate(90deg) scale(min(1, min(95vh / 1281, 95vw / 584)));
+                
+                /* Центруємо і повертаємо рівно по екрану телефона */
+                top: 0;
+                left: 100vw;
+                transform-origin: top left;
+                transform: rotate(90deg);
+                
+                --ch: 100vw; /* Висота контейнера тепер дорівнює ширині телефона */
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="full-bg"></div>
-
     <div class="layout-container">
         
-        <div id="email-wrapper" class="input-wrapper">
+        <div id="email-wrapper" class="ui-element">
             <input type="text" id="email" class="custom-input" autocomplete="off">
         </div>
 
-        <div id="password-wrapper" class="input-wrapper">
+        <div id="password-wrapper" class="ui-element">
             <input type="password" id="password" class="custom-input">
         </div>
 
-        <button id="login-btn"></button>
+        <button id="login-btn" class="ui-element"></button>
 
     </div>
 
@@ -147,16 +129,15 @@
         const passwordInput = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
 
-        // Функція перевірки та оновлення картинок
         function updateStates() {
-            // Email: змінюємо картинку, якщо поле у фокусі АБО в ньому є текст
+            // Перевіряємо Email
             if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
             } else {
                 emailWrapper.style.backgroundImage = "url('img/email.png')";
             }
 
-            // Пароль: змінюємо картинку, якщо поле у фокусі АБО в ньому є текст
+            // Перевіряємо Password
             if (passwordInput === document.activeElement || passwordInput.value.length > 0) {
                 passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
             } else {
@@ -164,17 +145,16 @@
             }
         }
 
-        // Події для Email
+        // Слухаємо події для полів
         emailInput.addEventListener('focus', updateStates);
         emailInput.addEventListener('blur', updateStates);
         emailInput.addEventListener('input', updateStates);
 
-        // Події для Паролю
         passwordInput.addEventListener('focus', updateStates);
         passwordInput.addEventListener('blur', updateStates);
         passwordInput.addEventListener('input', updateStates);
         
-        // Викликаємо один раз при старті
+        // Виклик при завантаженні (якщо браузер сам вставив збережений пароль)
         updateStates();
     </script>
 
