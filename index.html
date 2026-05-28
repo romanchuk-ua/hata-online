@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Responsive Login Page</title>
+    <title>Авторизація</title>
     <style>
-        /* Base styles - ensure full screen usage */
+        /* Базові стилі */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Prevent scrolling, force single view */
-            background-color: #fff; /* White background, but will be covered by bg.png */
+            overflow: hidden; 
+            background-color: #0f0f12; 
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* The background scene */
+        /* Задній фон */
         .full-bg {
             position: fixed;
             top: 0;
@@ -32,106 +32,93 @@
             z-index: 1;
         }
 
-        /* Responsive Layout Container: Scales based on viewport aspect ratio */
+        /* Контейнер макета */
         .layout-container {
             position: relative;
             z-index: 2;
-            pointer-events: none; /* Let clicks pass through container to UI elements */
+            pointer-events: none; 
             
-            /* Scaling factor logic (Visual Pixels scaled using vmin) */
+            /* Масштабування */
             --design-width: 1281;
             --design-height: 584;
-            --base-scale: 1vmin; /* Controls scaling intensity */
+            --base-scale: 1vmin; 
 
             width: calc(var(--design-width) * var(--base-scale));
             height: calc(var(--design-height) * var(--base-scale));
             
-            /* Center and handle mobile rotation */
             transition: transform 0.3s ease;
         }
 
-        /* Shared UI element properties - using percentages for internal scaling */
+        /* Спільні стилі для елементів */
         .ui-element {
             position: absolute;
-            pointer-events: auto; /* Enable clicks on inputs and buttons */
+            pointer-events: auto; 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
         }
 
-        /* Email Input Wrapper */
+        /* Обгортка Email */
         #email-wrapper {
-            /* Positioning relative to top-right corner using vmin scales */
             top: calc(165 * var(--base-scale));
             right: calc(31 * var(--base-scale));
-            
-            /* Figma Dimensions scaled down to container context */
             width: calc(473 * var(--base-scale));
             height: calc(64 * var(--base-scale));
-            
             background-image: url('img/email.png');
             display: flex;
             align-items: center;
         }
 
-        /* Password Input Wrapper */
+        /* Обгортка Паролю */
         #password-wrapper {
             top: calc(245 * var(--base-scale));
             right: calc(31 * var(--base-scale));
-            
             width: calc(473 * var(--base-scale));
             height: calc(64 * var(--base-scale));
-            
             background-image: url('img/password.png');
             display: flex;
             align-items: center;
         }
 
-        /* Login Button */
+        /* Кнопка Логіну */
         #login-btn {
             top: calc(325 * var(--base-scale));
             right: calc(26 * var(--base-scale));
-            
             width: calc(251 * var(--base-scale));
             height: calc(63 * var(--base-scale));
-            
             background-image: url('img/login.png');
             background-color: transparent;
             border: none;
             cursor: pointer;
             transition: opacity 0.2s;
+            outline: none;
         }
         #login-btn:hover { opacity: 0.8; }
+        #login-btn:active { transform: scale(0.98); }
 
-        /* Actual input fields */
+        /* Поля введення */
         .custom-input {
             width: 100%;
             height: 100%;
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff; /* White text as requested */
-            font-size: calc(18 * var(--base-scale)); /* Scale font */
-            padding: 0 calc(20 * var(--base-scale)); /* Responsive padding */
+            color: #ffffff; 
+            font-size: calc(18 * var(--base-scale)); 
+            padding: 0 calc(20 * var(--base-scale)); 
             box-sizing: border-box;
             font-family: sans-serif;
         }
 
-        /* Mobile Adjustment: Force Landscape Rotation and Fill Width */
+        /* Мобільна адаптація */
         @media screen and (orientation: portrait) {
             .layout-container {
-                /* Rotate container 90deg */
                 transform: rotate(90deg);
-                
-                /* Adjust scaling: width becomes height, fit to screen width */
                 --base-scale: calc(100vw / var(--design-height)); 
-                
-                /* Recalculate dimensions for new scale and orientation */
                 width: calc(var(--design-width) * var(--base-scale));
                 height: calc(var(--design-height) * var(--base-scale));
             }
         }
-
     </style>
 </head>
 <body>
@@ -153,37 +140,42 @@
     </div>
 
     <script>
-        // State change logic for inputs
-        const email = document.getElementById('email');
+        // Отримуємо всі потрібні елементи
+        const emailInput = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
-        const password = document.getElementById('password');
+        
+        const passwordInput = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
 
-        // Functions to update background based on interaction
-        function updateEmailState() {
-            if (email === document.activeElement || email.value.length > 0) {
+        // Головна функція, яка оновлює картинки
+        function updateStates() {
+            // Перевіряємо Email: якщо активний АБО має введений текст
+            if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
             } else {
                 emailWrapper.style.backgroundImage = "url('img/email.png')";
             }
-        }
 
-        function updatePasswordState() {
-            if (password === document.activeElement || password.value.length > 0) {
+            // Перевіряємо Пароль: якщо активний АБО має введений текст
+            if (passwordInput === document.activeElement || passwordInput.value.length > 0) {
                 passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
             } else {
                 passwordWrapper.style.backgroundImage = "url('img/password.png')";
             }
         }
 
-        // Listen for focus/blur and typing
-        email.addEventListener('focus', updateEmailState);
-        email.addEventListener('blur', updateEmailState);
-        email.addEventListener('input', updateEmailState);
+        // Вішаємо події на Email (коли клікнули, коли прибрали курсор, коли ввели символ)
+        emailInput.addEventListener('focus', updateStates);
+        emailInput.addEventListener('blur', updateStates);
+        emailInput.addEventListener('input', updateStates);
 
-        password.addEventListener('focus', updatePasswordState);
-        password.addEventListener('blur', updatePasswordState);
-        password.addEventListener('input', updatePasswordState);
+        // Вішаємо події на Пароль (коли клікнули, коли прибрали курсор, коли ввели символ)
+        passwordInput.addEventListener('focus', updateStates);
+        passwordInput.addEventListener('blur', updateStates);
+        passwordInput.addEventListener('input', updateStates);
+        
+        // Початковий виклик, щоб перевірити, чи браузер випадково не автозаповнив поля при завантаженні сторінки
+        updateStates();
     </script>
 
 </body>
