@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Авторизація</title>
+    <title>Авторизація та Завантаження</title>
     <style>
         /* Скидаємо стандартні відступи */
         body, html {
@@ -11,34 +11,49 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Ніяких скролів */
+            overflow: hidden; 
             background-color: #000;
             font-family: sans-serif;
         }
 
-        /* Контейнер, який повністю заповнює екран (100% ширини і висоти) */
+        /* Головний контейнер */
         .layout-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
+            /* Початковий фон - меню входу */
             background-image: url('img/bg.png');
-            background-size: 100% 100%; /* Розтягуємо фон точно по екрану */
+            background-size: 100% 100%; 
             background-repeat: no-repeat;
-            --ch: 100vh; /* Змінна для правильного розміру шрифту */
+            --ch: 100vh; 
+        }
+
+        /* Контейнери для різних сцен */
+        .scene {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Сцена завантаження прихована за замовчуванням */
+        #loading-scene {
+            display: none;
         }
 
         /* Спільні стилі для елементів інтерфейсу */
         .ui-element {
             position: absolute;
-            background-size: 100% 100%; /* Картинки кнопок розтягуються разом з макетом */
+            background-size: 100% 100%; 
             background-repeat: no-repeat;
             display: flex;
             align-items: center;
         }
 
-        /* Email: перевели пікселі з Figma у відсотки */
+        /* Email */
         #email-wrapper {
             top: calc(165 / 584 * 100%);
             right: calc(31 / 1281 * 100%);
@@ -47,7 +62,7 @@
             background-image: url('img/email.png');
         }
 
-        /* Password: перевели пікселі з Figma у відсотки */
+        /* Password */
         #password-wrapper {
             top: calc(245 / 584 * 100%);
             right: calc(31 / 1281 * 100%);
@@ -56,7 +71,7 @@
             background-image: url('img/password.png');
         }
 
-        /* Кнопка Логін: перевели пікселі з Figma у відсотки */
+        /* Кнопка Логін */
         #login-btn {
             top: calc(325 / 584 * 100%);
             right: calc(26 / 1281 * 100%);
@@ -81,9 +96,28 @@
             border: none;
             outline: none;
             color: #ffffff;
-            font-size: calc(var(--ch) * 0.035); /* Розмір шрифту ідеально адаптується */
-            padding: 0 5%; /* Гнучкий внутрішній відступ */
+            font-size: calc(var(--ch) * 0.035); 
+            padding: 0 5%; 
             box-sizing: border-box;
+        }
+
+        /* =========================================
+           Елементи екрану завантаження
+           ========================================= */
+        #progress-track {
+            position: absolute;
+            top: calc(556 / 584 * 100%);
+            left: calc(82 / 1281 * 100%);
+            width: calc(1117 / 1281 * 100%);
+            height: calc(10 / 584 * 100%);
+            background-color: #494949; /* Сірий фон смуги */
+        }
+
+        #progress-fill {
+            width: 0%; /* Початкова ширина */
+            height: 100%;
+            background-color: #F1FE3F; /* Колір завантаження */
+            /* Плавність буде задаватись через JS динамічно */
         }
 
         /* =========================================
@@ -91,53 +125,63 @@
            ========================================= */
         @media screen and (orientation: portrait) {
             .layout-container {
-                /* Міняємо місцями ширину та висоту */
                 width: 100vh;
                 height: 100vw;
-                
-                /* Центруємо і повертаємо рівно по екрану телефона */
                 top: 0;
                 left: 100vw;
                 transform-origin: top left;
                 transform: rotate(90deg);
-                
-                --ch: 100vw; /* Висота контейнера тепер дорівнює ширині телефона */
+                --ch: 100vw; 
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="layout-container">
+    <div class="layout-container" id="main-container">
         
-        <div id="email-wrapper" class="ui-element">
-            <input type="text" id="email" class="custom-input" autocomplete="off">
+        <div class="scene" id="login-scene">
+            <div id="email-wrapper" class="ui-element">
+                <input type="text" id="email" class="custom-input" autocomplete="off">
+            </div>
+
+            <div id="password-wrapper" class="ui-element">
+                <input type="password" id="password" class="custom-input">
+            </div>
+
+            <button id="login-btn" class="ui-element"></button>
         </div>
 
-        <div id="password-wrapper" class="ui-element">
-            <input type="password" id="password" class="custom-input">
+        <div class="scene" id="loading-scene">
+            <div id="progress-track">
+                <div id="progress-fill"></div>
+            </div>
         </div>
-
-        <button id="login-btn" class="ui-element"></button>
 
     </div>
 
     <script>
+        // Елементи логіну
         const emailInput = document.getElementById('email');
         const emailWrapper = document.getElementById('email-wrapper');
-        
         const passwordInput = document.getElementById('password');
         const passwordWrapper = document.getElementById('password-wrapper');
+        const loginBtn = document.getElementById('login-btn');
 
+        // Елементи для перемикання сцен
+        const mainContainer = document.getElementById('main-container');
+        const loginScene = document.getElementById('login-scene');
+        const loadingScene = document.getElementById('loading-scene');
+        const progressFill = document.getElementById('progress-fill');
+
+        // Логіка зміни картинок полів вводу
         function updateStates() {
-            // Перевіряємо Email
             if (emailInput === document.activeElement || emailInput.value.length > 0) {
                 emailWrapper.style.backgroundImage = "url('img/email_h.png')";
             } else {
                 emailWrapper.style.backgroundImage = "url('img/email.png')";
             }
 
-            // Перевіряємо Password
             if (passwordInput === document.activeElement || passwordInput.value.length > 0) {
                 passwordWrapper.style.backgroundImage = "url('img/password_h.png')";
             } else {
@@ -145,7 +189,6 @@
             }
         }
 
-        // Слухаємо події для полів
         emailInput.addEventListener('focus', updateStates);
         emailInput.addEventListener('blur', updateStates);
         emailInput.addEventListener('input', updateStates);
@@ -154,8 +197,34 @@
         passwordInput.addEventListener('blur', updateStates);
         passwordInput.addEventListener('input', updateStates);
         
-        // Виклик при завантаженні (якщо браузер сам вставив збережений пароль)
         updateStates();
+
+        // Логіка натискання на кнопку входу
+        loginBtn.addEventListener('click', () => {
+            // 1. Ховаємо поля вводу і кнопку
+            loginScene.style.display = 'none';
+
+            // 2. Змінюємо задній фон на зображення загрузки
+            mainContainer.style.backgroundImage = "url('img/game_load.png')";
+
+            // 3. Показуємо сцену із смугою завантаження
+            loadingScene.style.display = 'block';
+
+            // 4. Генеруємо випадковий час у мілісекундах: від 7000мс (7с) до 13000мс (13с)
+            const randomLoadTime = Math.floor(Math.random() * (13000 - 7000 + 1)) + 7000;
+
+            // 5. Запускаємо анімацію завантаження
+            // Використовуємо setTimeout на 50мс, щоб браузер встиг відобразити сцену перед початком анімації
+            setTimeout(() => {
+                progressFill.style.transition = `width ${randomLoadTime}ms linear`;
+                progressFill.style.width = '100%';
+            }, 50);
+
+            // 6. Перехід на іншу сторінку після завершення анімації
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, randomLoadTime + 50);
+        });
     </script>
 
 </body>
